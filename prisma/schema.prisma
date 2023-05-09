@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model cours {
+  id         Int         @id @default(autoincrement())
+  prof_id    Int
+  matiere_id Int
+  horaire_id Int
+  horaires   horaires    @relation(fields: [horaire_id], references: [id], onDelete: Cascade, map: "cours_ibfk_1")
+  matieres   matieres    @relation(fields: [matiere_id], references: [id], onDelete: Cascade, map: "cours_ibfk_2")
+  profs      profs       @relation(fields: [prof_id], references: [id], onDelete: Cascade, map: "cours_ibfk_3")
+  plannings  plannings[]
+
+  @@index([horaire_id], map: "horaire_id")
+  @@index([matiere_id], map: "matiere_id")
+  @@index([prof_id], map: "prof_id")
+}
+
+model eleves {
+  id        Int         @id @default(autoincrement())
+  nom       String      @db.VarChar(150)
+  prenom    String      @db.VarChar(150)
+  email     String      @db.VarChar(150)
+  promotion String      @db.VarChar(150)
+  notes     notes[]
+  plannings plannings[]
+}
+
+model horaires {
+  id    Int     @id @default(autoincrement())
+  debut String  @db.VarChar(100)
+  fin   String  @db.VarChar(100)
+  cours cours[]
+}
+
+model matieres {
+  id          Int     @id @default(autoincrement())
+  nom         String  @db.VarChar(150)
+  description String? @db.VarChar(150)
+  cours       cours[]
+  notes       notes[]
+  profs       profs[]
+}
+
+model notes {
+  id         Int      @id @default(autoincrement())
+  eleve_id   Int
+  matiere_id Int
+  prof_id    Int
+  note       Float    @db.Float
+  profs      profs    @relation(fields: [prof_id], references: [id], onDelete: Cascade, map: "notes_ibfk_1")
+  matieres   matieres @relation(fields: [matiere_id], references: [id], onDelete: Cascade, map: "notes_ibfk_2")
+  eleves     eleves   @relation(fields: [eleve_id], references: [id], onDelete: Cascade, map: "notes_ibfk_3")
+
+  @@index([eleve_id], map: "eleve_id")
+  @@index([matiere_id], map: "matiere_id")
+  @@index([prof_id], map: "prof_id")
+}
+
+model plannings {
+  id       Int    @id @default(autoincrement())
+  date     String @db.VarChar(100)
+  salle_id Int
+  cours_id Int
+  eleve_id Int
+  salles   salles @relation(fields: [salle_id], references: [id], onDelete: Cascade, map: "plannings_ibfk_1")
+  eleves   eleves @relation(fields: [eleve_id], references: [id], onDelete: Cascade, map: "plannings_ibfk_2")
+  cours    cours  @relation(fields: [cours_id], references: [id], onDelete: Cascade, map: "plannings_ibfk_3")
+
+  @@index([cours_id], map: "cours_id")
+  @@index([eleve_id], map: "eleve_id")
+  @@index([salle_id], map: "salle_id")
+}
+
+model profs {
+  id         Int      @id @default(autoincrement())
+  nom        String   @db.VarChar(150)
+  prenom     String   @db.VarChar(150)
+  email      String   @db.VarChar(150)
+  matiere_id Int
+  cours      cours[]
+  notes      notes[]
+  matieres   matieres @relation(fields: [matiere_id], references: [id], onDelete: Cascade, map: "profs_ibfk_1")
+
+  @@index([matiere_id], map: "matiere_id")
+}
+
+model salles {
+  id        Int         @id @default(autoincrement())
+  nom       String      @db.VarChar(100)
+  batiment  String      @db.VarChar(100)
+  plannings plannings[]
+}
